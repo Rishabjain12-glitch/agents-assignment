@@ -1,78 +1,150 @@
-# Voice Agents Examples
+How to Run the Agent
 
-This directory contains a comprehensive collection of voice-based agent examples demonstrating various capabilities and integrations with the LiveKit Agents framework.
+Follow these steps to set up, configure, and run the intelligent interruption-enabled LiveKit agent.
 
-## 📋 Table of Contents
+1. Clone Your Forked Repository
+git clone https://github.com/<your-username>/agents-assignment
+cd agents-assignment
 
-### 🚀 Getting Started
 
-- [`basic_agent.py`](./basic_agent.py) - A fundamental voice agent with metrics collection
 
-### 🛠️ Tool Integration & Function Calling
+2. Create & Activate Python Environment
+python -m venv venv
+source venv/bin/activate      # macOS/Linux
+venv\Scripts\activate         # Windows
 
-- [`annotated_tool_args.py`](./annotated_tool_args.py) - Using Python type annotations for tool arguments
-- [`dynamic_tool_creation.py`](./dynamic_tool_creation.py) - Creating and registering tools dynamically at runtime
-- [`raw_function_description.py`](./raw_function_description.py) - Using raw JSON schema definitions for tool descriptions
-- [`silent_function_call.py`](./silent_function_call.py) - Executing function calls without verbal responses to user
-- [`long_running_function.py`](./long_running_function.py) - Handling long running function calls with interruption support
+3. Install Dependencies
+pip install -r requirements.txt
 
-### ⚡ Real-time Models
+# LiveKit Agent Dependencies
+livekit-agents>=0.8.0
+livekit-plugins-deepgram>=0.6.0
+livekit-plugins-openai>=0.7.0
+livekit-plugins-silero>=0.6.0
+livekit-plugins-cartesia>=0.2.0
 
-- [`weather_agent.py`](./weather_agent.py) - OpenAI Realtime API with function calls for weather information
-- [`realtime_video_agent.py`](./realtime_video_agent.py) - Google Gemini with multimodal video and voice capabilities
-- [`realtime_joke_teller.py`](./realtime_joke_teller.py) - Amazon Nova Sonic real-time model with function calls
-- [`realtime_load_chat_history.py`](./realtime_load_chat_history.py) - Loading previous chat history into real-time models
-- [`realtime_turn_detector.py`](./realtime_turn_detector.py) - Using LiveKit's turn detection with real-time models
-- [`realtime_with_tts.py`](./realtime_with_tts.py) - Combining external TTS providers with real-time models
+# Core dependencies
+python-dotenv>=1.0.0
+aiohttp>=3.9.0
 
-### 🎯 Pipeline Nodes & Hooks
+# Optional: For development and testing
+pytest>=7.4.0
+pytest-asyncio>=0.21.0
 
-- [`fast-preresponse.py`](./fast-preresponse.py) - Generating quick responses using the `on_user_turn_completed` node
-- [`flush_llm_node.py`](./flush_llm_node.py) - Flushing partial LLM output to TTS in `llm_node`
-- [`structured_output.py`](./structured_output.py) - Structured data and JSON outputs from agent responses
-- [`speedup_output_audio.py`](./speedup_output_audio.py) - Dynamically adjusting agent audio playback speed
-- [`timed_agent_transcript.py`](./timed_agent_transcript.py) - Reading timestamped transcripts from `transcription_node`
-- [`inactive_user.py`](./inactive_user.py) - Handling inactive users with the `user_state_changed` event hook
-- [`resume_interrupted_agent.py`](./resume_interrupted_agent.py) - Resuming agent speech after false interruption detection
-- [`toggle_io.py`](./toggle_io.py) - Dynamically toggling audio input/output during conversations
 
-### 🤖 Multi-agent & AgentTask Use Cases
+4. Add Your LiveKit Credentials
 
-- [`restaurant_agent.py`](./restaurant_agent.py) - Multi-agent system for restaurant ordering and reservation management
-- [`multi_agent.py`](./multi_agent.py) - Collaborative storytelling with multiple specialized agents
-- [`email_example.py`](./email_example.py) - Using AgentTask to collect and validate email addresses
+Create a .env file:
 
-### 🔗 MCP & External Integrations
+LIVEKIT_API_KEY=your_api_key
+LIVEKIT_API_SECRET=your_secret
+LIVEKIT_WS_URL=wss://your-livekit-url
+OPENAI_API_KEY=
 
-- [`web_search.py`](./web_search.py) - Integrating web search capabilities into voice agents
-- [`langgraph_agent.py`](./langgraph_agent.py) - LangGraph integration
-- [`mcp/`](./mcp/) - Model Context Protocol (MCP) integration examples
-  - [`mcp-agent.py`](./mcp/mcp-agent.py) - MCP agent integration
-  - [`server.py`](./mcp/server.py) - MCP server example
-- [`zapier_mcp_integration.py`](./zapier_mcp_integration.py) - Automating workflows with Zapier through MCP
+5. Run the Agent
+python basic_agent.py dev
 
-### 💾 RAG & Knowledge Management
 
-- [`llamaindex-rag/`](./llamaindex-rag/) - Complete RAG implementation with LlamaIndex
-  - [`chat_engine.py`](./llamaindex-rag/chat_engine.py) - Chat engine integration
-  - [`query_engine.py`](./llamaindex-rag/query_engine.py) - Query engine used in a function tool
-  - [`retrieval.py`](./llamaindex-rag/retrieval.py) - Document retrieval
+This starts a LiveKit agent with:
 
-### 🎵 Specialized Use Cases
+Deepgram Nova-3 speech-to-text
 
-- [`background_audio.py`](./background_audio.py) - Playing background audio or ambient sounds during conversations
-- [`push_to_talk.py`](./push_to_talk.py) - Push-to-talk interaction
-- [`tts_text_pacing.py`](./tts_text_pacing.py) - Pacing control for TTS requests
-- [`speaker_id_multi_speaker.py`](./speaker_id_multi_speaker.py) - Multi-speaker identification
+GPT-4o-mini LLM
 
-### 📊 Tracing & Error Handling
+Cartesia Sonic-2 text-to-speech
 
-- [`langfuse_trace.py`](./langfuse_trace.py) - LangFuse integration for conversation tracing
-- [`error_callback.py`](./error_callback.py) - Error handling callback
-- [`session_close_callback.py`](./session_close_callback.py) - Session lifecycle management
+Silero VAD
 
-## 📖 Additional Resources
+Intelligent Interruption Handler
 
-- [LiveKit Agents Documentation](https://docs.livekit.io/agents/)
-- [Agents Starter Example](https://github.com/livekit-examples/agent-starter-python)
-- [More Agents Examples](https://github.com/livekit-examples/python-agents-examples)
+How the Logic Works (Core Explanation)
+
+our system introduces a semantic logic layer between LiveKit’s VAD and the agent’s reply generation.
+
+This layer ensures human-like conversational flow by distinguishing between:
+
+✔ Backchannel cues
+
+Examples: “yeah”, “ok”, “hmm”, “uh-huh”, “right”
+→ These should NOT interrupt the agent when it is speaking.
+→ These SHOULD be treated as valid input when agent is silent.
+
+✔ True interruption commands
+
+Examples: “stop”, “wait”, “hold on”, “no”, “pause”
+→ These must immediately interrupt the agent.
+
+✔ Mixed-intent sentences
+
+Example: “yeah okay but wait”
+→ Although it starts with soft cues, it contains an interruption command.
+→ The agent correctly stops.
+
+ How the IntelligentInterruptionHandler Works
+
+Inside interrupt_handler.py, your handler executes a four-step decision pipeline whenever the user speaks:
+1. Normalize the Transcription
+normalized = self._normalize_text(text)
+
+
+Removes punctuation, lowercases, handles hyphens (e.g., “uh-huh”).
+
+2. Detect Interruption Keywords
+self._contains_interrupt_word(text)
+
+
+This checks for:
+
+Single words → “stop”, “wait”, “no”
+
+Multi-word phrases → “hang on”, “hold on”
+
+Embedded commands → “yeah but wait a second”
+
+If found → IMMEDIATE INTERRUPT
+
+3. Detect Pure Backchannel Input
+self._is_only_backchannel(text)
+
+
+Checks if every word is soft filler.
+
+Examples considered backchannel:
+
+yeah, ok, hmmm, mm-hmm, uh-huh, sure, right, mhmm, uh
+
+
+If backchannel ONLY + agent speaking → IGNORE
+
+4. Evaluate Agent Speaking State
+
+The agent updates its speaking state:
+
+agent.interrupt_handler.set_agent_speaking_state(True/False)
+
+
+Final decision:
+
+Agent Speaking?	Input Type	Action
+Yes	Backchannel	Ignore
+Yes	Real content	Interrupt
+No	Anything	Respond normally
+🧩 Why This Logic Works
+
+Your implementation satisfies all required behaviors:
+
+🟢 Agent reading long text
+
+User: “yeah ok uh-huh” → no interruption
+
+🟢 Agent silent
+
+User: “yeah” → agent responds properly
+
+🔴 User overrides agent
+
+User: “stop / wait / no” → agent instantly stops
+
+🔥 Mixed intention
+
+User: “yeah okay but wait” → agent interrupts
